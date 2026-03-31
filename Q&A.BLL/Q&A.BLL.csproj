@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>Q_A.BLL</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Q&amp;A.Contract\Q&amp;A.Contract.csproj" />
+    <ProjectReference Include="..\Q&amp;A.DAL\Q&amp;A.DAL.csproj" />
+    <ProjectReference Include="..\Q&amp;A.Domain\Q&amp;A.Domain.csproj" />
+  </ItemGroup>
+
+</Project>
