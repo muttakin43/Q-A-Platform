@@ -1,0 +1,12 @@
+﻿@model Q_A.web.Models.CommentInputModel
+
+<form asp-action="AddComment" method="post" class="mt-2">
+    <input type="hidden" asp-for="ParentId" />
+    <input type="hidden" asp-for="ParentType" /> @* "Question" or "Answer" *@
+
+    <div class="input-group">
+        <input asp-for="Content" class="form-control form-control-sm" placeholder="Add a comment..." />
+        <button type="submit" class="btn btn-sm btn-primary">Comment</button>
+    </div>
+    <span asp-validation-for="Content" class="text-danger small"></span>
+</form>

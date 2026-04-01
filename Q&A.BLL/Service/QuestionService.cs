@@ -11,6 +11,7 @@ public class QuestionService : IQuestionService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IVoteService _voteService;
     private readonly UserManager<ApplicationUser> _userManager;
+    private List<int>? tagIds;
 
     public QuestionService(IUnitOfWork unitOfWork, IVoteService voteService, UserManager<ApplicationUser> userManager)
     {
@@ -205,5 +206,140 @@ public class QuestionService : IQuestionService
             Categories = categories.Select(c => new SelectDTO { Value = c.CategoryId.ToString(), Text = c.Name }).ToList(),
             Tags = tags.Select(t => new SelectDTO { Value = t.TagId.ToString(), Text = t.Name }).ToList()
         };
+    }
+
+   
+   
+    public async Task UpdateQuestionAsync(object questionId, string title, string description, int categoryId, List<int> list, IEnumerable<string> newTagNames)
+    {
+        int id = Convert.ToInt32(questionId);
+
+        var question = await _unitOfWork.Questions
+            .Query()
+            .Include(q => q.QuestionTags)
+            .FirstOrDefaultAsync(q => q.QuestionId == id);
+
+        if (question == null)
+            throw new Exception("Question not found");
+
+        
+        question.Title = title;
+        question.Description = description;
+        question.CategoryId = categoryId;
+
+        _unitOfWork.Questions.Update(question);
+
+       
+        var oldTags = question.QuestionTags.ToList();
+        foreach (var qt in oldTags)
+        {
+            _unitOfWork.QuestionTags.Delete(qt);
+        }
+
+        await _unitOfWork.SaveChangesAsync();
+
+        var distinctTagIds = tagIds?.Distinct().ToList() ?? new List<int>();
+
+        var cleanedNewNames = newTagNames?
+            .Where(n => !string.IsNullOrWhiteSpace(n))
+            .Select(n => n.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList() ?? new List<string>();
+
+        var allTags = await _unitOfWork.Tags.GetAllAsync();
+
+        foreach (var name in cleanedNewNames)
+        {
+            var existing = allTags.FirstOrDefault(t =>
+                t.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+
+            if (existing != null)
+            {
+                distinctTagIds.Add(existing.TagId);
+                continue;
+            }
+
+            var slug = ToSlug(name);
+            var slugExists = allTags.Any(t => t.Slug == slug);
+            var finalSlug = slugExists ? $"{slug}-{DateTime.UtcNow.Ticks}" : slug;
+
+            var newTag = new Tag
+            {
+                Name = name,
+                Slug = finalSlug,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _unitOfWork.Tags.AddAsync(newTag);
+            await _unitOfWork.SaveChangesAsync();
+
+            allTags = await _unitOfWork.Tags.GetAllAsync();
+            distinctTagIds.Add(newTag.TagId);
+        }
+
+        distinctTagIds = distinctTagIds.Distinct().ToList();
+
+        // Add updated tags
+        foreach (var tagId in distinctTagIds)
+        {
+            await _unitOfWork.QuestionTags.AddAsync(new QuestionTag
+            {
+                QuestionId = question.QuestionId,
+                TagId = tagId
+            });
+        }
+
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task DeleteQuestionAsync(int id)
+    {
+        var question = await _unitOfWork.Questions
+         .Query()
+         .Include(q => q.Answers)
+         .Include(q => q.QuestionTags)
+         .FirstOrDefaultAsync(q => q.QuestionId == id);
+
+        if (question == null)
+            throw new Exception("Question not found");
+
+        // Remove QuestionTags
+        foreach (var qt in question.QuestionTags.ToList())
+        {
+            _unitOfWork.QuestionTags.Delete(qt);
+        }
+
+        // Remove Answers (cascade না থাকলে)
+        foreach (var ans in question.Answers.ToList())
+        {
+            _unitOfWork.Answers.Delete(ans);
+        }
+
+        // Finally remove question
+        _unitOfWork.Questions.Delete(question);
+
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task<Question?> GetQuestionByIdAsync(object questionId)
+    {
+        int id = Convert.ToInt32(questionId);
+
+        return await _unitOfWork.Questions
+            .Query()
+            .Include(q => q.QuestionTags)
+            .ThenInclude(qt => qt.Tag)
+            .Include(q => q.User)
+            .FirstOrDefaultAsync(q => q.QuestionId == id);
+    }
+
+    Task IQuestionService.GetQuestionByIdAsync(object questionId)
+    {
+        return GetQuestionByIdAsync(questionId);
+    }
+
+    public Task<bool> AcceptAnswerAsync(int questionId, int answerId, string email)
+    {
+        throw new NotImplementedException();
     }
 }

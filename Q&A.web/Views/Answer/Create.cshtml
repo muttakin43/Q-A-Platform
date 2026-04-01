@@ -1,0 +1,12 @@
+﻿@model Q_A.web.Models.AnswerInputModel
+
+<form asp-action="AddAnswer" method="post" class="mb-3">
+    <input type="hidden" asp-for="QuestionId" />
+
+    <div class="mb-2">
+        <textarea asp-for="Content" class="form-control" rows="4" placeholder="Write your answer..."></textarea>
+        <span asp-validation-for="Content" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-sm">Post Answer</button>
+</form>

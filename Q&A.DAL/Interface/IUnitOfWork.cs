@@ -15,6 +15,8 @@ namespace Q_A.DAL.Interface
         ICommentRepository Comments { get; }
         IVoteRepository Votes { get; }
         IQuestionTagRepository QuestionTags { get; }
+
+        Task SaveAsync();
         Task<int> SaveChangesAsync();
     }
 }

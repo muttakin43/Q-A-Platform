@@ -23,5 +23,6 @@ namespace Q_A.web.Models
 
         public IEnumerable<SelectListItem> Categories { get; set; } = Enumerable.Empty<SelectListItem>();
         public IEnumerable<SelectListItem> Tags { get; set; } = Enumerable.Empty<SelectListItem>();
+        public object QuestionId { get; internal set; }
     }
 }

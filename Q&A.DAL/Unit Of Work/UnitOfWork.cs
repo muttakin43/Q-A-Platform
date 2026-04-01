@@ -43,9 +43,21 @@ namespace Q_A.DAL.Unit_Of_Work
             await _dbContext.DisposeAsync();
         }
 
+       
+
         public Task<int> SaveChangesAsync()
         {
             return _dbContext.SaveChangesAsync();
+        }
+
+        Task IUnitOfWork.SaveAsync()
+        {
+            return SaveAsync();
+        }
+
+        private async Task SaveAsync()
+        {
+            
         }
     }
 }

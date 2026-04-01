@@ -13,6 +13,9 @@ namespace Q_A.BLL.Interface
         Task<IReadOnlyList<QuestionListDTO>> GetLatestQuestionsAsync(int take = 20);
         Task<CreateQuestionDTO> GetCreatePageDataAsync();
         Task CreateQuestionAsync(string userEmail, string title, string description, int categoryId, IEnumerable<int> tagIds, IEnumerable<string> newTagNames);
+        Task GetQuestionByIdAsync(object questionId);
+        Task DeleteQuestionAsync(int id);
+        Task<bool> AcceptAnswerAsync(int questionId, int answerId, string email);
     }
 }
 

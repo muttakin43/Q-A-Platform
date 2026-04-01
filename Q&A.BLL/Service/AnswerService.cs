@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
-
+using Microsoft.EntityFrameworkCore;
 using Q_A.BLL.Interface;
 using Q_A.DAL.Interface;
 using Q_A.Domain;
@@ -44,4 +44,8 @@ public class AnswerService : IAnswerService
         await _unitOfWork.Answers.AddAsync(answer);
         await _unitOfWork.SaveChangesAsync();
     }
+
+   
+
+   
 }

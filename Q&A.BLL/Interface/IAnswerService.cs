@@ -9,7 +9,7 @@ namespace Q_A.BLL.Interface
     public interface IAnswerService
     {
         Task AddAnswerAsync(int questionId, string userEmail, string content);
-
+        
     }
 }
 

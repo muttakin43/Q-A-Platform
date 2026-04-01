@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-
+using Microsoft.CodeAnalysis.FlowAnalysis.DataFlow;
 using Q_A.BLL.Interface;
+using Q_A.Domain;
 using Q_A.web.Models;
 
 namespace Ostad.Forum.Web.Controllers;
@@ -16,12 +18,12 @@ public class QuestionController(
     private readonly IAnswerService _answerService = answerService;
     private readonly IVoteService _voteService = voteService;
 
-  
     [AllowAnonymous]
     public async Task<IActionResult> Details(int id)
     {
         var dto = await _questionService.GetQuestionDetailsAsync(id);
-        if (dto == null) return NotFound();
+        if (dto == null)
+            return NotFound();
 
         var model = new QuestionDetailsViewModel
         {
@@ -40,14 +42,31 @@ public class QuestionController(
                 Content = a.Content,
                 AuthorName = a.AuthorName,
                 CreatedAt = a.CreatedAt,
-                Score = a.Score,
-               
+                Score = a.Score
             }).ToList()
         };
         return View(model);
     }
 
-    
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [Authorize]
+    public async Task<IActionResult> AddAnswer(AnswerInputModel model)
+    {
+        var email = User.Identity?.Name;
+        if (string.IsNullOrEmpty(email))
+            return Challenge();
+
+        if (string.IsNullOrWhiteSpace(model?.Content))
+        {
+            TempData["AnswerError"] = "Answer content is required.";
+            return RedirectToAction(nameof(Details), new { id = model!.QuestionId });
+        }
+
+        await _answerService.AddAnswerAsync(model.QuestionId, email, model.Content);
+        return RedirectToAction(nameof(Details), new { id = model.QuestionId });
+    }
+
     [Authorize]
     [HttpGet]
     public async Task<IActionResult> Create()
@@ -61,9 +80,9 @@ public class QuestionController(
         return View(model);
     }
 
-    [Authorize]
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize]
     public async Task<IActionResult> Create(QuestionCreateViewModel model)
     {
         if (!ModelState.IsValid)
@@ -74,8 +93,13 @@ public class QuestionController(
             return View(model);
         }
 
-        var email = User.Identity?.Name ?? "";
-        var newTagNames = (model.NewTags ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries).Select(t => t.Trim());
+        var email = User.Identity?.Name;
+        if (string.IsNullOrEmpty(email))
+            return Challenge();
+
+        var newTagNames = (model.NewTags ?? string.Empty)
+            .Split(',', StringSplitOptions.RemoveEmptyEntries)
+            .Select(t => t.Trim());
 
         await _questionService.CreateQuestionAsync(
             email,
@@ -83,35 +107,10 @@ public class QuestionController(
             model.Description,
             model.CategoryId,
             model.SelectedTagIds ?? new List<int>(),
-            newTagNames
-        );
+            newTagNames);
 
         return RedirectToAction("Index", "Home");
     }
 
-   
-   
 
-   
-
-   
-
-    [Authorize]
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> AddAnswer(AnswerInputModel model)
-    {
-        var email = User.Identity?.Name ?? "";
-        if (string.IsNullOrWhiteSpace(model?.Content))
-        {
-            TempData["AnswerError"] = "Answer content is required.";
-            return RedirectToAction(nameof(Details), new { id = model!.QuestionId });
-        }
-
-        await _answerService.AddAnswerAsync(model.QuestionId, email, model.Content);
-        return RedirectToAction(nameof(Details), new { id = model.QuestionId });
-    }
-
-    
-   
 }
