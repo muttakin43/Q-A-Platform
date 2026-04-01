@@ -11,10 +11,6 @@ namespace Q_A.Domain
         public int AnswerId { get; set; }
 
         public string Content { get; set; } = null!;
-      
-
-       
-        
         public int QuestionId { get; set; }
         public string UserId { get; set; } = null!;
 

@@ -26,6 +26,9 @@ namespace Q_A.Domain
         public ApplicationUser User { get; set; } = null!;
         public Category Category { get; set; } = null!;
 
+        public int? AcceptedAnswerId { get; set; }
+        public Answer? AcceptedAnswer { get; set; }
+
         public ICollection<Answer> Answers { get; set; } = new List<Answer>();
         public ICollection<QuestionTag> QuestionTags { get; set; } = new List<QuestionTag>();
         public ICollection<Comment> Comments { get; set; } = new List<Comment>();

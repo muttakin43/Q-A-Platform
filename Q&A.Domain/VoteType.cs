@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 
 namespace Q_A.Domain
 {
-    public class VoteType
+    public enum VoteType
     {
+        Downvote = -1,
+        Upvote = 1
     }
 }

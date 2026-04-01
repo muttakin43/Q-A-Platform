@@ -9,5 +9,6 @@ namespace Q_A.Domain
     public class Entity
     {
         public DateTime CreatedAt { get; set; }= DateTime.Now;
+        public bool IsDeleted { get; set; } = false;
     }
 }
